@@ -81,7 +81,7 @@
             <article class="tool-panel">
               <h3>How MetaMask Connects</h3>
               <p>Install the MetaMask browser extension, open this page, and click <strong>Connect MetaMask</strong>. The browser asks for permission to expose your wallet address to this demo.</p>
-              <p>When a Sepolia contract address is configured in <strong>app/app.js</strong>, submissions also trigger MetaMask transaction popups.</p>
+              <p>When the wallet is connected, paper, review, and citation submissions can trigger Sepolia transaction popups. The demo writes a small evidence message into transaction data.</p>
             </article>
             <article class="tool-panel">
               <h3>Can It Review DOCX Papers?</h3>
@@ -122,6 +122,7 @@
               <button class="primary-button" type="submit">Generate Hash and Register</button>
               <span id="submitMessage"></span>
             </div>
+            <p class="helper-text">Wallet connected: this will request a Sepolia transaction. Wallet not connected: this saves a local demo record only.</p>
           </form>
         </section>
 
@@ -188,6 +189,6 @@
       </main>
     </div>
 
-    <script src="./app.js?v=20260502-2"></script>
+    <script src="./app.js?v=20260502-3"></script>
   </body>
 </html>

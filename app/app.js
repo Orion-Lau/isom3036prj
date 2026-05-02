@@ -1,6 +1,7 @@
 const contractAddress = "0x0000000000000000000000000000000000000000";
 const zeroAddress = "0x0000000000000000000000000000000000000000";
-const storageVersion = 2;
+const storageVersion = 3;
+const sepoliaChainId = "0xaa36a7";
 
 const contractAbi = [
   "function submitPaper(string title,string contentHash,string metadataURI) returns (uint256)",
@@ -66,6 +67,12 @@ function formatTime(value) {
     dateStyle: "medium",
     timeStyle: "short"
   }).format(new Date(value));
+}
+
+function txLink(txHash) {
+  if (!txHash) return "";
+  const safeHash = escapeHtml(txHash);
+  return `<p>Evidence transaction: <a class="hash" href="https://sepolia.etherscan.io/tx/${safeHash}" target="_blank" rel="noreferrer">${safeHash}</a></p>`;
 }
 
 function bufferToHex(buffer) {
@@ -142,7 +149,7 @@ async function connectWallet() {
     const network = await state.provider.getNetwork();
     const networkName = network.chainId === 11155111n ? "Sepolia" : `Chain ID ${network.chainId.toString()}`;
     els.networkStatus.textContent = contractAddress === zeroAddress
-      ? `${networkName} connected; local demo storage`
+      ? `${networkName} connected; evidence transaction mode`
       : `${networkName} connected; contract ready`;
 
     if (contractAddress !== zeroAddress) {
@@ -154,6 +161,67 @@ async function connectWallet() {
     els.networkStatus.textContent = `Wallet connection cancelled or failed`;
     console.error(error);
   }
+}
+
+async function ensureSepolia() {
+  if (!window.ethereum) return;
+
+  const currentChainId = await window.ethereum.request({ method: "eth_chainId" });
+  if (currentChainId === sepoliaChainId) return;
+
+  try {
+    await window.ethereum.request({
+      method: "wallet_switchEthereumChain",
+      params: [{ chainId: sepoliaChainId }]
+    });
+  } catch (error) {
+    if (error.code !== 4902) throw error;
+    await window.ethereum.request({
+      method: "wallet_addEthereumChain",
+      params: [{
+        chainId: sepoliaChainId,
+        chainName: "Sepolia",
+        nativeCurrency: {
+          name: "Sepolia ETH",
+          symbol: "ETH",
+          decimals: 18
+        },
+        rpcUrls: ["https://rpc.sepolia.org"],
+        blockExplorerUrls: ["https://sepolia.etherscan.io"]
+      }]
+    });
+  }
+}
+
+function utf8ToHex(input) {
+  const bytes = new TextEncoder().encode(input);
+  return `0x${Array.from(bytes)
+    .map((byte) => byte.toString(16).padStart(2, "0"))
+    .join("")}`;
+}
+
+async function sendEvidenceTransaction(kind, payload) {
+  if (!state.account || state.contract) return "";
+
+  await ensureSepolia();
+  els.networkStatus.textContent = "Waiting for MetaMask transaction confirmation...";
+  const evidence = JSON.stringify({
+    app: "ProofScholar",
+    kind,
+    payload,
+    createdAt: nowStamp()
+  });
+  const txHash = await window.ethereum.request({
+    method: "eth_sendTransaction",
+    params: [{
+      from: state.account,
+      to: state.account,
+      value: "0x0",
+      data: utf8ToHex(evidence)
+    }]
+  });
+  els.networkStatus.textContent = `Sepolia evidence tx: ${short(txHash)}`;
+  return txHash;
 }
 
 function updateEnvironmentHint() {
@@ -213,7 +281,18 @@ async function submitPaper(event) {
         fileType: hashData.fileType
       });
       const tx = await state.contract.submitPaper(title, hashData.contentHash, metadata);
-      await tx.wait();
+      const receipt = await tx.wait();
+      hashData.txHash = receipt.hash || receipt.transactionHash || tx.hash;
+    } else if (state.account) {
+      els.submitMessage.textContent = "Waiting for MetaMask evidence transaction...";
+      hashData.txHash = await sendEvidenceTransaction("paper", {
+        title,
+        author,
+        contentHash: hashData.contentHash,
+        sourceType: hashData.sourceType,
+        fileName: hashData.fileName,
+        aiScore
+      });
     }
 
     state.papers.push({
@@ -225,6 +304,7 @@ async function submitPaper(event) {
       fileName: hashData.fileName,
       fileSize: hashData.fileSize,
       fileType: hashData.fileType,
+      txHash: hashData.txHash || "",
       aiScore,
       owner: state.account || "demo-wallet",
       timestamp
@@ -247,6 +327,7 @@ async function submitReview(event) {
   const paperId = Number(els.paperSelect.value);
   if (!paperId) return;
 
+  let reviewTxHash = "";
   const reviewer = document.querySelector("#reviewerName").value.trim();
   const text = document.querySelector("#reviewText").value.trim();
   const score = Number(document.querySelector("#reviewScore").value);
@@ -254,7 +335,15 @@ async function submitReview(event) {
 
   if (state.contract) {
     const tx = await state.contract.submitReview(paperId, reviewHash, score);
-    await tx.wait();
+    const receipt = await tx.wait();
+    reviewTxHash = receipt.hash || receipt.transactionHash || tx.hash;
+  } else if (state.account) {
+    reviewTxHash = await sendEvidenceTransaction("review", {
+      paperId,
+      reviewer,
+      reviewHash,
+      score
+    });
   }
 
   state.reviews[paperId] ||= [];
@@ -262,6 +351,7 @@ async function submitReview(event) {
     reviewer,
     score,
     reviewHash,
+    txHash: reviewTxHash || "",
     timestamp: nowStamp()
   });
 
@@ -277,15 +367,23 @@ async function submitCitation(event) {
   const target = Number(els.citationTarget.value);
   if (!source || !target || source === target) return;
 
+  let citationTxHash = "";
   if (state.contract) {
     const tx = await state.contract.declareCitation(source, target);
-    await tx.wait();
+    const receipt = await tx.wait();
+    citationTxHash = receipt.hash || receipt.transactionHash || tx.hash;
+  } else if (state.account) {
+    citationTxHash = await sendEvidenceTransaction("citation", {
+      sourcePaperId: source,
+      citedPaperId: target
+    });
   }
 
   state.citations.push({
     source,
     target,
     declarer: state.account || "demo-wallet",
+    txHash: citationTxHash || "",
     timestamp: nowStamp()
   });
   saveLocal();
@@ -343,6 +441,7 @@ function renderPaperDetail() {
     <p>AI originality score: ${paper.aiScore}/100</p>
     ${fileLine}
     <p class="hash">${escapeHtml(paper.contentHash)}</p>
+    ${txLink(paper.txHash)}
   `;
 
   const reviews = state.reviews[paper.id] || [];
@@ -351,6 +450,7 @@ function renderPaperDetail() {
       <article class="record">
         <strong>${escapeHtml(review.reviewer)} - Score ${review.score}</strong>
         <span class="hash">${escapeHtml(review.reviewHash)}</span>
+        ${txLink(review.txHash)}
         <span class="record-meta">${formatTime(review.timestamp)}</span>
       </article>
     `).join("")
@@ -365,6 +465,7 @@ function renderCitations() {
       return `
         <article class="record">
           <strong>#${citation.source} ${escapeHtml(source?.title || "")} cites #${citation.target} ${escapeHtml(target?.title || "")}</strong>
+          ${txLink(citation.txHash)}
           <span class="record-meta">Declared by ${escapeHtml(short(citation.declarer))} at ${formatTime(citation.timestamp)}</span>
         </article>
       `;
