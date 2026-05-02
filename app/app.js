@@ -420,7 +420,8 @@ function renderGraph() {
   `;
 }
 
-function seedDemo() {
+function seedDemo(options = {}) {
+  const navigate = options.navigate !== false;
   state.papers = [
     {
       id: 1,
@@ -490,6 +491,10 @@ function seedDemo() {
   ];
   saveLocal();
   renderAll();
+  els.submitMessage.textContent = "Demo data loaded";
+  if (navigate) {
+    switchView("detail");
+  }
 }
 
 function renderAll() {
@@ -498,22 +503,28 @@ function renderAll() {
   renderCitations();
 }
 
+function on(element, eventName, handler) {
+  if (element) {
+    element.addEventListener(eventName, handler);
+  }
+}
+
 document.querySelectorAll(".nav-tab").forEach((tab) => {
-  tab.addEventListener("click", () => switchView(tab.dataset.view));
+  on(tab, "click", () => switchView(tab.dataset.view));
 });
 document.querySelectorAll("[data-jump]").forEach((button) => {
-  button.addEventListener("click", () => switchView(button.dataset.jump));
+  on(button, "click", () => switchView(button.dataset.jump));
 });
-els.connectWallet.addEventListener("click", connectWallet);
-els.seedDemo.addEventListener("click", seedDemo);
-els.paperForm.addEventListener("submit", submitPaper);
-els.reviewForm.addEventListener("submit", submitReview);
-els.citationForm.addEventListener("submit", submitCitation);
-els.paperSelect.addEventListener("change", renderPaperDetail);
-els.deletePaper.addEventListener("click", deleteSelectedPaper);
+on(els.connectWallet, "click", connectWallet);
+on(els.seedDemo, "click", seedDemo);
+on(els.paperForm, "submit", submitPaper);
+on(els.reviewForm, "submit", submitReview);
+on(els.citationForm, "submit", submitCitation);
+on(els.paperSelect, "change", renderPaperDetail);
+on(els.deletePaper, "click", deleteSelectedPaper);
 
 loadLocal();
-if (!state.papers.length) seedDemo();
+if (!state.papers.length) seedDemo({ navigate: false });
 updateWalletUi();
 updateEnvironmentHint();
 renderAll();
