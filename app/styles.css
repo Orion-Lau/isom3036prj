@@ -168,7 +168,8 @@ h3 {
 }
 
 .primary-button,
-.ghost-button {
+.ghost-button,
+.danger-button {
   min-height: 42px;
   padding: 0 16px;
   border-radius: 8px;
@@ -189,6 +190,15 @@ h3 {
   color: var(--ink);
   background: #ffffff;
   border-color: var(--line);
+}
+
+.danger-button {
+  color: #ffffff;
+  background: var(--rose);
+}
+
+.danger-button:hover {
+  background: #91364b;
 }
 
 .view {

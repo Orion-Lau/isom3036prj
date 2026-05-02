@@ -31,6 +31,7 @@ const els = {
   paperForm: document.querySelector("#paperForm"),
   paperSelect: document.querySelector("#paperSelect"),
   paperDetail: document.querySelector("#paperDetail"),
+  deletePaper: document.querySelector("#deletePaper"),
   reviewForm: document.querySelector("#reviewForm"),
   reviewList: document.querySelector("#reviewList"),
   citationForm: document.querySelector("#citationForm"),
@@ -291,6 +292,27 @@ async function submitCitation(event) {
   renderAll();
 }
 
+function deleteSelectedPaper() {
+  const paperId = Number(els.paperSelect.value);
+  if (!paperId) return;
+
+  const paper = state.papers.find((item) => item.id === paperId);
+  const message = state.contract
+    ? "This only removes the paper from local demo storage. Blockchain records cannot be deleted once submitted."
+    : "Delete this paper from local demo storage?";
+
+  if (!window.confirm(`${message}\n\nPaper: #${paperId} ${paper?.title || ""}`)) {
+    return;
+  }
+
+  state.papers = state.papers.filter((item) => item.id !== paperId);
+  delete state.reviews[paperId];
+  state.citations = state.citations.filter((item) => item.source !== paperId && item.target !== paperId);
+
+  saveLocal();
+  renderAll();
+}
+
 function renderSelects() {
   const options = state.papers
     .map((paper) => `<option value="${paper.id}">#${paper.id} ${escapeHtml(paper.title)}</option>`)
@@ -488,6 +510,7 @@ els.paperForm.addEventListener("submit", submitPaper);
 els.reviewForm.addEventListener("submit", submitReview);
 els.citationForm.addEventListener("submit", submitCitation);
 els.paperSelect.addEventListener("change", renderPaperDetail);
+els.deletePaper.addEventListener("click", deleteSelectedPaper);
 
 loadLocal();
 if (!state.papers.length) seedDemo();
