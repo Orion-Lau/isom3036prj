@@ -1,0 +1,16 @@
+{
+  "name": "academic-integrity-chain",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Blockchain academic integrity MVP for ISOM3036.",
+  "scripts": {
+    "compile": "hardhat compile",
+    "deploy:sepolia": "hardhat run scripts/deploy.js --network sepolia",
+    "serve": "npx http-server app -p 5173"
+  },
+  "devDependencies": {
+    "@nomicfoundation/hardhat-toolbox": "^5.0.0",
+    "dotenv": "^16.4.5",
+    "hardhat": "^2.22.19"
+  }
+}

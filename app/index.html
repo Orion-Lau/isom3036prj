@@ -1,0 +1,192 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>ProofScholar | Academic Integrity Chain</title>
+    <link rel="stylesheet" href="./styles.css">
+    <script src="https://cdn.jsdelivr.net/npm/ethers@6.13.5/dist/ethers.umd.min.js"></script>
+  </head>
+  <body>
+    <div class="app-shell">
+      <aside class="sidebar">
+        <div class="brand">
+          <div class="brand-mark">PS</div>
+          <div>
+            <strong>ProofScholar</strong>
+            <span>Academic Integrity Chain</span>
+          </div>
+        </div>
+
+        <nav class="nav-tabs" aria-label="Main pages">
+          <button class="nav-tab active" data-view="auth">Login / Wallet</button>
+          <button class="nav-tab" data-view="submit">Paper Submission</button>
+          <button class="nav-tab" data-view="detail">Paper Detail</button>
+          <button class="nav-tab" data-view="citations">Citation Tracking</button>
+        </nav>
+
+        <section class="chain-card">
+          <span class="status-dot" id="walletDot"></span>
+          <div>
+            <strong id="walletStatus">Wallet not connected</strong>
+            <small id="networkStatus">Demo mode ready</small>
+          </div>
+        </section>
+      </aside>
+
+      <main class="workspace">
+        <header class="topbar">
+          <div>
+            <p class="eyebrow">ISOM3036 Blockchain Application MVP</p>
+            <h1>Decentralized Academic Integrity Evidence Platform</h1>
+          </div>
+          <button class="primary-button" id="connectWallet">Connect MetaMask</button>
+        </header>
+
+        <section class="view active" id="view-auth">
+          <div class="hero-panel">
+            <div>
+              <p class="eyebrow">Novel Application</p>
+              <h2>Turn paper submission, peer review, and citation records into tamper-resistant academic evidence.</h2>
+              <p>
+                The platform records content hashes, timestamps, review hashes, and citation declarations.
+                The original paper is not stored on-chain, so private academic content stays off the public blockchain.
+              </p>
+              <div class="hero-actions">
+                <button class="primary-button" data-jump="submit">Submit a Paper</button>
+                <button class="ghost-button" id="seedDemo">Load Demo Data</button>
+              </div>
+            </div>
+            <div class="feature-grid">
+              <article>
+                <strong>Integrity</strong>
+                <span>SHA-256 hash proves the manuscript has not changed.</span>
+              </article>
+              <article>
+                <strong>Timestamping</strong>
+                <span>Submission time is recorded by local demo time or block time.</span>
+              </article>
+              <article>
+                <strong>Non-repudiation</strong>
+                <span>Wallet signatures link actions to submitters.</span>
+              </article>
+              <article>
+                <strong>Transparency</strong>
+                <span>Reviews and citation trails can be audited.</span>
+              </article>
+            </div>
+          </div>
+
+          <div class="info-grid">
+            <article class="tool-panel">
+              <h3>How MetaMask Connects</h3>
+              <p>Install the MetaMask browser extension, open this page, and click <strong>Connect MetaMask</strong>. The browser asks for permission to expose your wallet address to this demo.</p>
+              <p>When a Sepolia contract address is configured in <strong>app/app.js</strong>, submissions also trigger MetaMask transaction popups.</p>
+            </article>
+            <article class="tool-panel">
+              <h3>Can It Review DOCX Papers?</h3>
+              <p>Yes for the MVP workflow. Upload a <strong>.docx</strong> file, and the browser creates a SHA-256 file hash for blockchain evidence.</p>
+              <p>The demo does not read or store the full DOCX content on-chain. AI detection can be added later through GPTZero, Turnitin, or an OpenAI-based backend.</p>
+            </article>
+          </div>
+        </section>
+
+        <section class="view" id="view-submit">
+          <div class="section-heading">
+            <p class="eyebrow">Paper Submission</p>
+            <h2>Submit a Paper and Create Blockchain Evidence</h2>
+          </div>
+
+          <form class="tool-panel" id="paperForm">
+            <label>
+              Paper title
+              <input id="paperTitle" required placeholder="Example: Blockchain-based Academic Integrity System">
+            </label>
+            <label>
+              Author / group
+              <input id="paperAuthor" required placeholder="Group 6">
+            </label>
+            <label>
+              Upload manuscript file
+              <input id="paperFile" type="file" accept=".doc,.docx,.pdf,.txt,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/msword,text/plain">
+            </label>
+            <label>
+              Abstract or demo text
+              <textarea id="paperContent" rows="7" placeholder="Optional if a file is uploaded. If no file is uploaded, this text will be hashed instead."></textarea>
+            </label>
+            <label>
+              AI originality score
+              <input id="aiScore" type="number" min="0" max="100" value="86">
+            </label>
+            <div class="form-actions">
+              <button class="primary-button" type="submit">Generate Hash and Register</button>
+              <span id="submitMessage"></span>
+            </div>
+          </form>
+        </section>
+
+        <section class="view" id="view-detail">
+          <div class="section-heading">
+            <p class="eyebrow">Paper Detail</p>
+            <h2>Paper Evidence and Peer Review Records</h2>
+          </div>
+
+          <div class="split-layout">
+            <div class="tool-panel">
+              <label>
+                Select paper
+                <select id="paperSelect"></select>
+              </label>
+              <div id="paperDetail" class="detail-box"></div>
+            </div>
+
+            <form class="tool-panel" id="reviewForm">
+              <h3>Submit Peer Review</h3>
+              <label>
+                Reviewer
+                <input id="reviewerName" required placeholder="Reviewer wallet or name">
+              </label>
+              <label>
+                Review comment
+                <textarea id="reviewText" required rows="5" placeholder="The review text is not stored on-chain. Only the review hash is registered."></textarea>
+              </label>
+              <label>
+                Score
+                <input id="reviewScore" type="number" min="0" max="100" value="82">
+              </label>
+              <button class="primary-button" type="submit">Submit Review Hash</button>
+            </form>
+          </div>
+
+          <div class="records-list" id="reviewList"></div>
+        </section>
+
+        <section class="view" id="view-citations">
+          <div class="section-heading">
+            <p class="eyebrow">Citation Tracker</p>
+            <h2>Citation Tracking and Provenance Graph</h2>
+          </div>
+
+          <form class="tool-panel compact-form" id="citationForm">
+            <label>
+              Paper
+              <select id="citationSource"></select>
+            </label>
+            <label>
+              cites
+              <select id="citationTarget"></select>
+            </label>
+            <button class="primary-button" type="submit">Declare Citation</button>
+          </form>
+
+          <div class="graph-panel">
+            <svg id="citationGraph" viewBox="0 0 900 430" role="img" aria-label="Citation graph"></svg>
+          </div>
+          <div class="records-list" id="citationList"></div>
+        </section>
+      </main>
+    </div>
+
+    <script src="./app.js"></script>
+  </body>
+</html>
