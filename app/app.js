@@ -497,6 +497,8 @@ function seedDemo(options = {}) {
   }
 }
 
+window.seedDemo = seedDemo;
+
 function renderAll() {
   renderSelects();
   renderPaperDetail();
