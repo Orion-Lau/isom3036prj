@@ -152,7 +152,7 @@ function updateWalletUi() {
 async function connectWallet() {
   if (!window.ethereum || !window.ethers) {
     els.networkStatus.textContent = "MetaMask is not available in this browser";
-    window.alert("MetaMask was not detected. Open http://localhost:5173/index.html in Chrome, Edge, or Brave after installing the MetaMask extension.");
+    window.alert("MetaMask was not detected. Open this GitHub Pages website in Chrome, Edge, or Brave after installing and unlocking the MetaMask extension.");
     return;
   }
 
@@ -242,7 +242,7 @@ async function sendEvidenceTransaction(kind, payload) {
 function updateEnvironmentHint() {
   if (!window.ethereum) {
     els.networkStatus.textContent = window.location.protocol === "file:"
-      ? "Open http://localhost:5173/index.html in Chrome/Edge for MetaMask"
+      ? "Open the GitHub Pages website in Chrome/Edge for MetaMask"
       : "MetaMask extension not detected";
   }
 }
