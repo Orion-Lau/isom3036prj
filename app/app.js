@@ -27,7 +27,11 @@ const els = {
   walletDot: document.querySelector("#walletDot"),
   walletStatus: document.querySelector("#walletStatus"),
   networkStatus: document.querySelector("#networkStatus"),
+  modeBanner: document.querySelector("#modeBanner"),
+  modeDescription: document.querySelector("#modeDescription"),
+  modePill: document.querySelector("#modePill"),
   connectWallet: document.querySelector("#connectWallet"),
+  submitPaperButton: document.querySelector("#submitPaperButton"),
   seedDemo: document.querySelector("#seedDemo"),
   paperForm: document.querySelector("#paperForm"),
   paperSelect: document.querySelector("#paperSelect"),
@@ -132,6 +136,17 @@ function updateWalletUi() {
   els.walletDot.classList.toggle("connected", connected);
   els.walletStatus.textContent = connected ? short(state.account) : "Wallet not connected";
   els.connectWallet.textContent = connected ? "Wallet Connected" : "Connect MetaMask";
+  els.modeBanner.classList.toggle("connected", connected);
+  els.modeBanner.querySelector("strong").textContent = connected
+    ? "Sepolia Evidence Transaction Mode"
+    : "Local Demo Mode";
+  els.modeDescription.textContent = connected
+    ? "Paper, review, and citation submissions will request a MetaMask transaction and save an Etherscan link."
+    : "Connect MetaMask to enable Sepolia evidence transactions.";
+  els.modePill.textContent = connected ? "Wallet Connected" : "No Wallet";
+  els.submitPaperButton.textContent = connected
+    ? "Generate Hash and Register on Sepolia"
+    : "Generate Hash and Register Locally";
 }
 
 async function connectWallet() {

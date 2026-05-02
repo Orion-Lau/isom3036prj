@@ -137,6 +137,47 @@ button {
   margin-bottom: 26px;
 }
 
+.mode-banner {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 22px;
+  padding: 14px 16px;
+  border: 1px solid var(--line);
+  border-left: 5px solid var(--gold);
+  border-radius: 8px;
+  background: #fffaf0;
+}
+
+.mode-banner strong,
+.mode-banner span {
+  display: block;
+}
+
+.mode-banner span {
+  color: var(--muted);
+}
+
+.mode-pill {
+  flex: 0 0 auto;
+  padding: 7px 10px;
+  border-radius: 999px;
+  color: #ffffff !important;
+  background: var(--gold);
+  font-size: 0.82rem;
+  font-weight: 800;
+}
+
+.mode-banner.connected {
+  border-left-color: var(--accent);
+  background: #eef9f4;
+}
+
+.mode-banner.connected .mode-pill {
+  background: var(--accent);
+}
+
 .eyebrow {
   margin: 0 0 7px;
   font-size: 0.76rem;
@@ -418,6 +459,11 @@ textarea {
 
   .topbar {
     align-items: stretch;
+    flex-direction: column;
+  }
+
+  .mode-banner {
+    align-items: flex-start;
     flex-direction: column;
   }
 

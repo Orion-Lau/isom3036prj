@@ -43,6 +43,14 @@
           <button class="primary-button" id="connectWallet">Connect MetaMask</button>
         </header>
 
+        <section class="mode-banner" id="modeBanner">
+          <div>
+            <strong>Local Demo Mode</strong>
+            <span id="modeDescription">Connect MetaMask to enable Sepolia evidence transactions.</span>
+          </div>
+          <span class="mode-pill" id="modePill">No Wallet</span>
+        </section>
+
         <section class="view active" id="view-auth">
           <div class="hero-panel">
             <div>
@@ -119,7 +127,7 @@
               <input id="aiScore" type="number" min="0" max="100" value="86">
             </label>
             <div class="form-actions">
-              <button class="primary-button" type="submit">Generate Hash and Register</button>
+              <button class="primary-button" id="submitPaperButton" type="submit">Generate Hash and Register Locally</button>
               <span id="submitMessage"></span>
             </div>
             <p class="helper-text">Wallet connected: this will request a Sepolia transaction. Wallet not connected: this saves a local demo record only.</p>
@@ -189,6 +197,6 @@
       </main>
     </div>
 
-    <script src="./app.js?v=20260502-3"></script>
+    <script src="./app.js?v=20260502-4"></script>
   </body>
 </html>
