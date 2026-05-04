@@ -2,7 +2,7 @@ const contractAddress = "0x0000000000000000000000000000000000000000";
 const zeroAddress = "0x0000000000000000000000000000000000000000";
 const storageVersion = 3;
 const sepoliaChainId = "0xaa36a7";
-const evidenceRecipient = "0x000000000000000000000000000000000000dEaD";
+const evidenceRecipient = "0x1111111111111111111111111111111111111111";
 
 const contractAbi = [
   "function submitPaper(string title,string contentHash,string metadataURI) returns (uint256)",
