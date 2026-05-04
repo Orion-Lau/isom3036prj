@@ -150,7 +150,7 @@
               <button class="danger-button" id="deletePaper" type="button">Delete Local Paper</button>
             </div>
 
-            <form class="tool-panel" id="reviewForm">
+            <div class="tool-panel" id="reviewForm">
               <h3>Submit Peer Review</h3>
               <label>
                 Reviewer
@@ -164,8 +164,9 @@
                 Score
                 <input id="reviewScore" type="number" min="0" max="100" value="82">
               </label>
-              <button class="primary-button" type="submit">Submit Review Hash</button>
-            </form>
+              <button class="primary-button" id="submitReviewButton" type="button" onclick="window.submitReviewFromButton && window.submitReviewFromButton()">Submit Review Hash</button>
+              <span id="reviewMessage" class="helper-text"></span>
+            </div>
           </div>
 
           <div class="records-list" id="reviewList"></div>
@@ -198,6 +199,6 @@
       </main>
     </div>
 
-    <script src="./app.js?v=20260502-7"></script>
+    <script src="./app.js?v=20260502-9"></script>
   </body>
 </html>

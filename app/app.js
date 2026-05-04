@@ -38,6 +38,8 @@ const els = {
   paperDetail: document.querySelector("#paperDetail"),
   deletePaper: document.querySelector("#deletePaper"),
   reviewForm: document.querySelector("#reviewForm"),
+  submitReviewButton: document.querySelector("#submitReviewButton"),
+  reviewMessage: document.querySelector("#reviewMessage"),
   reviewList: document.querySelector("#reviewList"),
   citationForm: document.querySelector("#citationForm"),
   citationSource: document.querySelector("#citationSource"),
@@ -339,28 +341,51 @@ async function submitPaper(event) {
   }
 }
 
+function showReviewMessage(message, useAlert = false) {
+  els.reviewMessage.textContent = message;
+  if (useAlert) {
+    window.alert(message);
+  }
+}
+
 async function submitReview(event) {
-  event.preventDefault();
+  event?.preventDefault();
+  els.reviewMessage.textContent = "";
   const paperId = Number(els.paperSelect.value);
-  if (!paperId) return;
+  if (!paperId) {
+    showReviewMessage("Please load demo data or submit a paper first.", true);
+    return;
+  }
 
   let reviewTxHash = "";
   const reviewer = document.querySelector("#reviewerName").value.trim();
   const text = document.querySelector("#reviewText").value.trim();
   const score = Number(document.querySelector("#reviewScore").value);
+  if (!reviewer || !text) {
+    showReviewMessage("Please enter a reviewer and review comment.", true);
+    return;
+  }
   const reviewHash = await sha256Text(`${paperId}\n${reviewer}\n${text}\n${score}`);
 
-  if (state.contract) {
-    const tx = await state.contract.submitReview(paperId, reviewHash, score);
-    const receipt = await tx.wait();
-    reviewTxHash = receipt.hash || receipt.transactionHash || tx.hash;
-  } else if (state.account) {
-    reviewTxHash = await sendEvidenceTransaction("review", {
-      paperId,
-      reviewer,
-      reviewHash,
-      score
-    });
+  try {
+    if (state.contract) {
+      showReviewMessage("Waiting for MetaMask transaction...");
+      const tx = await state.contract.submitReview(paperId, reviewHash, score);
+      const receipt = await tx.wait();
+      reviewTxHash = receipt.hash || receipt.transactionHash || tx.hash;
+    } else if (state.account) {
+      showReviewMessage("Waiting for MetaMask evidence transaction...");
+      reviewTxHash = await sendEvidenceTransaction("review", {
+        paperId,
+        reviewer,
+        reviewHash,
+        score
+      });
+    }
+  } catch (error) {
+    showReviewMessage(error.message || "Review transaction was cancelled or failed.", true);
+    console.error(error);
+    return;
   }
 
   state.reviews[paperId] ||= [];
@@ -374,9 +399,17 @@ async function submitReview(event) {
 
   saveLocal();
   renderAll();
-  event.target.reset();
+  showReviewMessage(`Review hash submitted for Paper #${paperId}`);
+  if (event?.target?.reset) {
+    event.target.reset();
+  } else {
+    document.querySelector("#reviewerName").value = "";
+    document.querySelector("#reviewText").value = "";
+  }
   document.querySelector("#reviewScore").value = 82;
 }
+
+window.submitReviewFromButton = () => submitReview();
 
 function showCitationMessage(message, useAlert = false) {
   els.citationMessage.textContent = message;
@@ -672,7 +705,6 @@ on(els.seedDemo, "click", seedDemo);
 on(els.paperForm, "submit", submitPaper);
 on(els.reviewForm, "submit", submitReview);
 on(els.citationForm, "submit", submitCitation);
-on(els.declareCitationButton, "click", submitCitation);
 on(els.paperSelect, "change", renderPaperDetail);
 on(els.deletePaper, "click", deleteSelectedPaper);
 
