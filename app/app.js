@@ -213,34 +213,20 @@ async function ensureSepolia() {
   }
 }
 
-function utf8ToHex(input) {
-  const bytes = new TextEncoder().encode(input);
-  return `0x${Array.from(bytes)
-    .map((byte) => byte.toString(16).padStart(2, "0"))
-    .join("")}`;
-}
-
 async function sendEvidenceTransaction(kind, payload) {
   if (!state.account || state.contract) return "";
 
   await ensureSepolia();
   els.networkStatus.textContent = "Waiting for MetaMask transaction confirmation...";
-  const evidence = JSON.stringify({
-    app: "ProofScholar",
-    kind,
-    payload,
-    createdAt: nowStamp()
-  });
   const txHash = await window.ethereum.request({
     method: "eth_sendTransaction",
     params: [{
       from: state.account,
       to: evidenceRecipient,
-      value: "0x0",
-      data: utf8ToHex(evidence)
+      value: "0x0"
     }]
   });
-  els.networkStatus.textContent = `Sepolia evidence tx: ${short(txHash)}`;
+  els.networkStatus.textContent = `Sepolia ${kind} timestamp tx: ${short(txHash)}`;
   return txHash;
 }
 
