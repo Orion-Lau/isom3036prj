@@ -42,6 +42,7 @@ const els = {
   citationForm: document.querySelector("#citationForm"),
   citationSource: document.querySelector("#citationSource"),
   citationTarget: document.querySelector("#citationTarget"),
+  declareCitationButton: document.querySelector("#declareCitationButton"),
   citationGraph: document.querySelector("#citationGraph"),
   citationList: document.querySelector("#citationList"),
   citationMessage: document.querySelector("#citationMessage"),
@@ -377,19 +378,26 @@ async function submitReview(event) {
   document.querySelector("#reviewScore").value = 82;
 }
 
+function showCitationMessage(message, useAlert = false) {
+  els.citationMessage.textContent = message;
+  if (useAlert) {
+    window.alert(message);
+  }
+}
+
 async function submitCitation(event) {
-  event.preventDefault();
+  event?.preventDefault();
   const source = Number(els.citationSource.value);
   const target = Number(els.citationTarget.value);
   els.citationMessage.textContent = "";
 
   if (!source || !target) {
-    els.citationMessage.textContent = "Please load demo data or submit at least two papers first.";
+    showCitationMessage("Please load demo data or submit at least two papers first.", true);
     return;
   }
 
   if (source === target) {
-    els.citationMessage.textContent = "Please choose two different papers. A paper cannot cite itself.";
+    showCitationMessage("Please choose two different papers. A paper cannot cite itself.", true);
     return;
   }
 
@@ -408,7 +416,7 @@ async function submitCitation(event) {
       });
     }
   } catch (error) {
-    els.citationMessage.textContent = error.message || "Citation transaction was cancelled or failed.";
+    showCitationMessage(error.message || "Citation transaction was cancelled or failed.", true);
     console.error(error);
     return;
   }
@@ -422,8 +430,10 @@ async function submitCitation(event) {
   });
   saveLocal();
   renderAll();
-  els.citationMessage.textContent = `Citation declared: Paper #${source} cites Paper #${target}`;
+  showCitationMessage(`Citation declared: Paper #${source} cites Paper #${target}`);
 }
+
+window.submitCitationFromButton = () => submitCitation();
 
 function deleteSelectedPaper() {
   const paperId = Number(els.paperSelect.value);
@@ -453,6 +463,10 @@ function renderSelects() {
   els.paperSelect.innerHTML = options || `<option value="">No papers yet</option>`;
   els.citationSource.innerHTML = options || `<option value="">No papers yet</option>`;
   els.citationTarget.innerHTML = options || `<option value="">No papers yet</option>`;
+
+  if (state.papers.length > 1 && els.citationSource.value === els.citationTarget.value) {
+    els.citationTarget.value = String(state.papers[1].id);
+  }
 }
 
 function renderPaperDetail() {
@@ -658,6 +672,7 @@ on(els.seedDemo, "click", seedDemo);
 on(els.paperForm, "submit", submitPaper);
 on(els.reviewForm, "submit", submitReview);
 on(els.citationForm, "submit", submitCitation);
+on(els.declareCitationButton, "click", submitCitation);
 on(els.paperSelect, "change", renderPaperDetail);
 on(els.deletePaper, "click", deleteSelectedPaper);
 

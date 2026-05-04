@@ -177,7 +177,7 @@
             <h2>Citation Tracking and Provenance Graph</h2>
           </div>
 
-          <form class="tool-panel compact-form" id="citationForm">
+          <div class="tool-panel compact-form" id="citationForm">
             <label>
               Paper
               <select id="citationSource"></select>
@@ -186,9 +186,9 @@
               cites
               <select id="citationTarget"></select>
             </label>
-            <button class="primary-button" type="submit">Declare Citation</button>
+            <button class="primary-button" id="declareCitationButton" type="button" onclick="window.submitCitationFromButton && window.submitCitationFromButton()">Declare Citation</button>
             <span id="citationMessage" class="helper-text"></span>
-          </form>
+          </div>
 
           <div class="graph-panel">
             <svg id="citationGraph" viewBox="0 0 900 430" role="img" aria-label="Citation graph"></svg>
@@ -198,6 +198,6 @@
       </main>
     </div>
 
-    <script src="./app.js?v=20260502-6"></script>
+    <script src="./app.js?v=20260502-7"></script>
   </body>
 </html>
