@@ -2,6 +2,7 @@ const contractAddress = "0x0000000000000000000000000000000000000000";
 const zeroAddress = "0x0000000000000000000000000000000000000000";
 const storageVersion = 3;
 const sepoliaChainId = "0xaa36a7";
+const evidenceRecipient = "0x000000000000000000000000000000000000dEaD";
 
 const contractAbi = [
   "function submitPaper(string title,string contentHash,string metadataURI) returns (uint256)",
@@ -234,7 +235,7 @@ async function sendEvidenceTransaction(kind, payload) {
     method: "eth_sendTransaction",
     params: [{
       from: state.account,
-      to: state.account,
+      to: evidenceRecipient,
       value: "0x0",
       data: utf8ToHex(evidence)
     }]
