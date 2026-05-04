@@ -46,7 +46,7 @@
         <section class="mode-banner" id="modeBanner">
           <div>
             <strong>Local Demo Mode</strong>
-            <span id="modeDescription">Connect MetaMask to enable Sepolia evidence transactions.</span>
+            <span id="modeDescription">Connect MetaMask to attach a wallet address to evidence records.</span>
           </div>
           <span class="mode-pill" id="modePill">No Wallet</span>
         </section>
@@ -89,7 +89,7 @@
             <article class="tool-panel">
               <h3>How MetaMask Connects</h3>
               <p>Install the MetaMask browser extension, open this page, and click <strong>Connect MetaMask</strong>. The browser asks for permission to expose your wallet address to this demo.</p>
-              <p>When the wallet is connected, paper, review, and citation submissions can trigger Sepolia transaction popups. The transaction hash anchors the action time and wallet signature.</p>
+              <p>When the wallet is connected, paper, review, and citation submissions create evidence records below without opening a MetaMask transaction confirmation.</p>
             </article>
             <article class="tool-panel">
               <h3>Can It Review DOCX Papers?</h3>
@@ -130,7 +130,7 @@
               <button class="primary-button" id="submitPaperButton" type="submit">Generate Hash and Register Locally</button>
               <span id="submitMessage"></span>
             </div>
-            <p class="helper-text">Wallet connected: this will request a Sepolia transaction. Wallet not connected: this saves a local demo record only.</p>
+            <p class="helper-text">Wallet connected: this creates an evidence record linked to the wallet address. Wallet not connected: this saves a local demo record only.</p>
           </form>
         </section>
 
@@ -199,6 +199,6 @@
       </main>
     </div>
 
-    <script src="./app.js?v=20260502-12"></script>
+    <script src="./app.js?v=20260502-13"></script>
   </body>
 </html>

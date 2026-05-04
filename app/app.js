@@ -80,6 +80,9 @@ function formatTime(value) {
 
 function txLink(txHash) {
   if (!txHash) return "";
+  if (txHash.startsWith("local:")) {
+    return `<p>Evidence record: <span class="hash">${escapeHtml(txHash)}</span></p>`;
+  }
   const safeHash = escapeHtml(txHash);
   return `<p>Evidence transaction: <a class="hash" href="https://sepolia.etherscan.io/tx/${safeHash}" target="_blank" rel="noreferrer">${safeHash}</a></p>`;
 }
@@ -143,14 +146,14 @@ function updateWalletUi() {
   els.connectWallet.textContent = connected ? "Wallet Connected" : "Connect MetaMask";
   els.modeBanner.classList.toggle("connected", connected);
   els.modeBanner.querySelector("strong").textContent = connected
-    ? "Sepolia Evidence Transaction Mode"
+    ? "Wallet Evidence Record Mode"
     : "Local Demo Mode";
   els.modeDescription.textContent = connected
-    ? "Paper, review, and citation submissions will request a MetaMask transaction and save an Etherscan link."
+    ? "Paper, review, and citation submissions will create evidence records below without opening a MetaMask transaction popup."
     : "Connect MetaMask to enable Sepolia evidence transactions.";
   els.modePill.textContent = connected ? "Wallet Connected" : "No Wallet";
   els.submitPaperButton.textContent = connected
-    ? "Generate Hash and Register on Sepolia"
+    ? "Generate Hash and Show Evidence Record"
     : "Generate Hash and Register Locally";
 }
 
@@ -216,18 +219,16 @@ async function ensureSepolia() {
 async function sendEvidenceTransaction(kind, payload) {
   if (!state.account || state.contract) return "";
 
-  await ensureSepolia();
-  els.networkStatus.textContent = "Waiting for MetaMask transaction confirmation...";
-  const txHash = await window.ethereum.request({
-    method: "eth_sendTransaction",
-    params: [{
-      from: state.account,
-      to: evidenceRecipient,
-      value: "0x0"
-    }]
-  });
-  els.networkStatus.textContent = `Sepolia ${kind} timestamp tx: ${short(txHash)}`;
-  return txHash;
+  const evidenceHash = await sha256Text(JSON.stringify({
+    app: "ProofScholar",
+    kind,
+    wallet: state.account,
+    payload,
+    createdAt: nowStamp()
+  }));
+  const evidenceId = `local:${kind}:${evidenceHash.slice(2, 14)}`;
+  els.networkStatus.textContent = `Evidence record created: ${evidenceId}`;
+  return evidenceId;
 }
 
 function updateEnvironmentHint() {
