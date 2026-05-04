@@ -1,8 +1,6 @@
 const contractAddress = "0x0000000000000000000000000000000000000000";
 const zeroAddress = "0x0000000000000000000000000000000000000000";
 const storageVersion = 3;
-const sepoliaChainId = "0xaa36a7";
-const evidenceRecipient = "0x1111111111111111111111111111111111111111";
 
 const contractAbi = [
   "function submitPaper(string title,string contentHash,string metadataURI) returns (uint256)",
@@ -143,14 +141,14 @@ function updateWalletUi() {
   const connected = Boolean(state.account);
   els.walletDot.classList.toggle("connected", connected);
   els.walletStatus.textContent = connected ? short(state.account) : "Wallet not connected";
-  els.connectWallet.textContent = connected ? "Wallet Connected" : "Connect MetaMask";
+  els.connectWallet.textContent = connected ? "Demo Wallet Active" : "Use Demo Wallet";
   els.modeBanner.classList.toggle("connected", connected);
   els.modeBanner.querySelector("strong").textContent = connected
     ? "Wallet Evidence Record Mode"
     : "Local Demo Mode";
   els.modeDescription.textContent = connected
     ? "Paper, review, and citation submissions will create evidence records below without opening a MetaMask transaction popup."
-    : "Connect MetaMask to enable Sepolia evidence transactions.";
+    : "Use the demo wallet to attach an identity to evidence records.";
   els.modePill.textContent = connected ? "Wallet Connected" : "No Wallet";
   els.submitPaperButton.textContent = connected
     ? "Generate Hash and Show Evidence Record"
@@ -158,62 +156,12 @@ function updateWalletUi() {
 }
 
 async function connectWallet() {
-  if (!window.ethereum || !window.ethers) {
-    els.networkStatus.textContent = "MetaMask is not available in this browser";
-    window.alert("MetaMask was not detected. Open this GitHub Pages website in Chrome, Edge, or Brave after installing and unlocking the MetaMask extension.");
-    return;
-  }
-
-  try {
-    const accounts = await window.ethereum.request({ method: "eth_requestAccounts" });
-    state.account = accounts[0];
-    state.provider = new ethers.BrowserProvider(window.ethereum);
-    state.signer = await state.provider.getSigner();
-    const network = await state.provider.getNetwork();
-    const networkName = network.chainId === 11155111n ? "Sepolia" : `Chain ID ${network.chainId.toString()}`;
-    els.networkStatus.textContent = contractAddress === zeroAddress
-      ? `${networkName} connected; evidence transaction mode`
-      : `${networkName} connected; contract ready`;
-
-    if (contractAddress !== zeroAddress) {
-      state.contract = new ethers.Contract(contractAddress, contractAbi, state.signer);
-    }
-
-    updateWalletUi();
-  } catch (error) {
-    els.networkStatus.textContent = `Wallet connection cancelled or failed`;
-    console.error(error);
-  }
-}
-
-async function ensureSepolia() {
-  if (!window.ethereum) return;
-
-  const currentChainId = await window.ethereum.request({ method: "eth_chainId" });
-  if (currentChainId === sepoliaChainId) return;
-
-  try {
-    await window.ethereum.request({
-      method: "wallet_switchEthereumChain",
-      params: [{ chainId: sepoliaChainId }]
-    });
-  } catch (error) {
-    if (error.code !== 4902) throw error;
-    await window.ethereum.request({
-      method: "wallet_addEthereumChain",
-      params: [{
-        chainId: sepoliaChainId,
-        chainName: "Sepolia",
-        nativeCurrency: {
-          name: "Sepolia ETH",
-          symbol: "ETH",
-          decimals: 18
-        },
-        rpcUrls: ["https://rpc.sepolia.org"],
-        blockExplorerUrls: ["https://sepolia.etherscan.io"]
-      }]
-    });
-  }
+  state.account = "demo-wallet-0x1234...7890";
+  state.provider = null;
+  state.signer = null;
+  state.contract = null;
+  els.networkStatus.textContent = "Demo wallet connected; no MetaMask popup";
+  updateWalletUi();
 }
 
 async function sendEvidenceTransaction(kind, payload) {
@@ -232,11 +180,7 @@ async function sendEvidenceTransaction(kind, payload) {
 }
 
 function updateEnvironmentHint() {
-  if (!window.ethereum) {
-    els.networkStatus.textContent = window.location.protocol === "file:"
-      ? "Open the GitHub Pages website in Chrome/Edge for MetaMask"
-      : "MetaMask extension not detected";
-  }
+  els.networkStatus.textContent = "Demo mode ready; MetaMask popups disabled";
 }
 
 async function getPaperHash(title, author, content, file) {
@@ -277,21 +221,8 @@ async function submitPaper(event) {
     const id = state.papers.length + 1;
     const timestamp = nowStamp();
 
-    if (state.contract) {
-      els.submitMessage.textContent = "Waiting for MetaMask transaction...";
-      const metadata = JSON.stringify({
-        author,
-        aiScore,
-        sourceType: hashData.sourceType,
-        fileName: hashData.fileName,
-        fileSize: hashData.fileSize,
-        fileType: hashData.fileType
-      });
-      const tx = await state.contract.submitPaper(title, hashData.contentHash, metadata);
-      const receipt = await tx.wait();
-      hashData.txHash = receipt.hash || receipt.transactionHash || tx.hash;
-    } else if (state.account) {
-      els.submitMessage.textContent = "Waiting for MetaMask evidence transaction...";
+    if (state.account) {
+      els.submitMessage.textContent = "Creating wallet evidence record...";
       hashData.txHash = await sendEvidenceTransaction("paper", {
         title,
         author,
@@ -356,13 +287,8 @@ async function submitReview(event) {
   const reviewHash = await sha256Text(`${paperId}\n${reviewer}\n${text}\n${score}`);
 
   try {
-    if (state.contract) {
-      showReviewMessage("Waiting for MetaMask transaction...");
-      const tx = await state.contract.submitReview(paperId, reviewHash, score);
-      const receipt = await tx.wait();
-      reviewTxHash = receipt.hash || receipt.transactionHash || tx.hash;
-    } else if (state.account) {
-      showReviewMessage("Waiting for MetaMask evidence transaction...");
+    if (state.account) {
+      showReviewMessage("Creating wallet evidence record...");
       reviewTxHash = await sendEvidenceTransaction("review", {
         paperId,
         reviewer,
@@ -424,13 +350,8 @@ async function submitCitation(event) {
 
   let citationTxHash = "";
   try {
-    if (state.contract) {
-      els.citationMessage.textContent = "Waiting for MetaMask transaction...";
-      const tx = await state.contract.declareCitation(source, target);
-      const receipt = await tx.wait();
-      citationTxHash = receipt.hash || receipt.transactionHash || tx.hash;
-    } else if (state.account) {
-      els.citationMessage.textContent = "Waiting for MetaMask evidence transaction...";
+    if (state.account) {
+      els.citationMessage.textContent = "Creating wallet evidence record...";
       citationTxHash = await sendEvidenceTransaction("citation", {
         sourcePaperId: source,
         citedPaperId: target
