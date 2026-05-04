@@ -44,6 +44,7 @@ const els = {
   citationTarget: document.querySelector("#citationTarget"),
   citationGraph: document.querySelector("#citationGraph"),
   citationList: document.querySelector("#citationList"),
+  citationMessage: document.querySelector("#citationMessage"),
   submitMessage: document.querySelector("#submitMessage")
 };
 
@@ -380,18 +381,36 @@ async function submitCitation(event) {
   event.preventDefault();
   const source = Number(els.citationSource.value);
   const target = Number(els.citationTarget.value);
-  if (!source || !target || source === target) return;
+  els.citationMessage.textContent = "";
+
+  if (!source || !target) {
+    els.citationMessage.textContent = "Please load demo data or submit at least two papers first.";
+    return;
+  }
+
+  if (source === target) {
+    els.citationMessage.textContent = "Please choose two different papers. A paper cannot cite itself.";
+    return;
+  }
 
   let citationTxHash = "";
-  if (state.contract) {
-    const tx = await state.contract.declareCitation(source, target);
-    const receipt = await tx.wait();
-    citationTxHash = receipt.hash || receipt.transactionHash || tx.hash;
-  } else if (state.account) {
-    citationTxHash = await sendEvidenceTransaction("citation", {
-      sourcePaperId: source,
-      citedPaperId: target
-    });
+  try {
+    if (state.contract) {
+      els.citationMessage.textContent = "Waiting for MetaMask transaction...";
+      const tx = await state.contract.declareCitation(source, target);
+      const receipt = await tx.wait();
+      citationTxHash = receipt.hash || receipt.transactionHash || tx.hash;
+    } else if (state.account) {
+      els.citationMessage.textContent = "Waiting for MetaMask evidence transaction...";
+      citationTxHash = await sendEvidenceTransaction("citation", {
+        sourcePaperId: source,
+        citedPaperId: target
+      });
+    }
+  } catch (error) {
+    els.citationMessage.textContent = error.message || "Citation transaction was cancelled or failed.";
+    console.error(error);
+    return;
   }
 
   state.citations.push({
@@ -403,6 +422,7 @@ async function submitCitation(event) {
   });
   saveLocal();
   renderAll();
+  els.citationMessage.textContent = `Citation declared: Paper #${source} cites Paper #${target}`;
 }
 
 function deleteSelectedPaper() {
